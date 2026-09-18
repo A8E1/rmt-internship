@@ -15,3 +15,6 @@ Green: 24 passed after clamping each distance to zero or greater; null/zero mile
 ## Defect 3: money aggregation
 Red: 6 failed / 24 passed. Float residue, positive/negative half-cent amounts, rounding components before totals, and tiny amounts violated the replica cent-denominated contract. The combined-wait rounding case already passed.
 Green: 30 passed after rounding monetary components into signed integer cents before aggregation.
+
+## Final verification
+36 current Vitest tests passed across two files (30 billing cases and 6 adapter/startup checks). The historical Pass A verification passed 61,720 comparisons. git diff --check passed. No live backend requests were made.

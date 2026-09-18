@@ -1,25 +1,24 @@
-# Billing correctness — Passes A and B completed
+# Billing correctness — Passes A, B, and C
 
 ## What I built
 Extracted four billing entry points into src/lib/billing.js with explicit rates.
-Added 20 table-driven characterization cases in tests/billing.test.js, plus a locked
-Vitest setup; npm test runs them without loading the application or contacting its backend.
+Added characterization and adversarial tests in tests/billing.test.js, plus current
+UI-adapter checks in tests/billing-adapters.test.js.
 
 ## The concept
-Characterization testing captures observed behavior before changes. Dependency
-injection supplies rates explicitly; the purity boundary removes browser and global
-state dependencies. A passing characterization test does not make a quirk correct.
+Characterization testing records the starting behavior; regression tests specify
+corrections. Dependency injection isolates rates. Integer-cents aggregation avoids
+adding fractional dollar components directly.
 
 ## The story
-The replica lacked a billing regression suite. After preserving its calculations,
-I added 20 cases covering quotes, wait intervals, rental eligibility, and totals.
-All pass after a clean dependency install, alongside the original parity checks.
-Three cases document arithmetic quirks for investigation; no fixes or production
-outcomes are claimed yet.
+An existing PWA replica lacked billing tests. I preserved its behavior, added 20
+characterization cases, then reproduced 3 defects against explicit replica rules:
+string fees, negative mileage, and fractional-cent totals. Each has a failing-test
+commit followed by a verified fix. The original golden master remains in Git;
+these results establish local regression evidence, not production incident resolution.
 
 ## Follow-ups they'll ask
-- Why Vitest over Jest? Native ES-module support and concise table-driven tests fit
-  this module; no application build migration was needed.
-- Why pure functions? Explicit inputs make cases repeatable without browser setup.
-- What not to test? Keep UI layout and external services out of billing unit tests;
-  verify adapters separately and prioritize business rules over implementation details.
+- Why Vitest? ES-module support and it.each suit these pure calculations.
+- Why purity? Rates are arguments, so tests need neither browser nor backend.
+- What not to test? Keep external services and layout separate; test business
+  boundaries and adapter wiring. No claim of full browser or production validation.

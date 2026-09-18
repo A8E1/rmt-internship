@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import * as billing from '../src/lib/billing.js';
+// Historical verification only: deliberately check the immutable Pass A snapshot.
+const readSnapshot = p => execFileSync('git', ['show', '6fdb96a:' + p], { encoding: 'utf8' });
+const billing = await import('data:text/javascript;base64,' + Buffer.from(readSnapshot('src/lib/billing.js')).toString('base64'));
 
 // Immutable import commit, deliberately independent of the moving main branch.
 const original = execFileSync('git', ['show', '3cf1f50:js/core.js'], { encoding: 'utf8' });
-const current = readFileSync('js/core.js', 'utf8');
+const current = readSnapshot('js/core.js');
 const section = (source, start, end) => {
   const a = source.indexOf(start), b = source.indexOf(end, a);
   assert.ok(a >= 0 && b > a, 'Expected function boundaries');
@@ -80,14 +81,14 @@ for (const prices of priceCases) {
   }
 }
 
-const moduleSource = readFileSync('src/lib/billing.js', 'utf8');
+const moduleSource = readSnapshot('src/lib/billing.js');
 assert.doesNotMatch(moduleSource, /\b(fetch|window|document|localStorage|supabase|PRICES)\b|new Date\(/);
-const index = readFileSync('index.html', 'utf8');
+const index = readSnapshot('index.html');
 const startup = index.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];
 assert.ok(startup, 'Module startup exists');
 assert.match(startup, /import \* as billing from '\/src\/lib\/billing\.js';/);
 assert.ok(index.indexOf('src="/js/settings.js"') < index.indexOf('<script type="module">'));
-assert.doesNotMatch(readFileSync('js/settings.js', 'utf8'), /^boot\(\);/m);
+assert.doesNotMatch(readSnapshot('js/settings.js'), /^boot\(\);/m);
 let boots = 0;
 const startupContext = { billing, window: {}, boot() {
   assert.equal(startupContext.window.RMTBilling, billing, 'Billing is ready before boot');
@@ -95,5 +96,5 @@ const startupContext = { billing, window: {}, boot() {
 } };
 vm.runInNewContext(startup.replace(/^import .*;\s*$/m, ''), startupContext);
 assert.equal(boots, 1);
-assert.match(readFileSync('_headers', 'utf8'), /\/src\/lib\/\*/);
-console.log(`PASS: ${comparisons} baseline/module/adapter comparisons, input immutability, rate replacement, and startup wiring. No network calls.`);
+assert.match(readSnapshot('_headers'), /\/src\/lib\/\*/);
+console.log(`HISTORICAL PASS A: ${comparisons} baseline/module/adapter comparisons, input immutability, rate replacement, and startup wiring. No network calls.`);
