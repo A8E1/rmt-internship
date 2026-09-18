@@ -478,15 +478,7 @@ async function loadAll(){
 const DEFAULT_PRICES = { oneWayLoad:85, roundLoad:100, officePerMile:1, tripPerMile:4, waitPer15:11.25, wheelchairRent:30,
   /* v6.15: Stretcher runs price differently — every dial has a stretcher twin. Blank/null = use the standard value. Ambulatory always uses standard. */
   strOneWayLoad:null, strRoundLoad:null, strOfficePerMile:null, strTripPerMile:null, strWaitPer15:null };
-function pnum(v, fb){ const n = +v; return (v != null && v !== '' && isFinite(n) && n >= 0) ? n : fb; }
-function priceSet(kind){
-  if(kind === 'Stretcher'){
-    return { oneWayLoad:pnum(PRICES.strOneWayLoad, PRICES.oneWayLoad), roundLoad:pnum(PRICES.strRoundLoad, PRICES.roundLoad),
-      officePerMile:pnum(PRICES.strOfficePerMile, PRICES.officePerMile), tripPerMile:pnum(PRICES.strTripPerMile, PRICES.tripPerMile),
-      waitPer15:pnum(PRICES.strWaitPer15, PRICES.waitPer15) };
-  }
-  return { oneWayLoad:PRICES.oneWayLoad, roundLoad:PRICES.roundLoad, officePerMile:PRICES.officePerMile, tripPerMile:PRICES.tripPerMile, waitPer15:PRICES.waitPer15 };
-}
+function priceSet(kind){ return window.RMTBilling.priceSet(kind, PRICES); }
 let PRICES = Object.assign({}, DEFAULT_PRICES);
 const DEFAULT_OPS = { buffer:10, gkey:'', clashMin:45, conflictMin:90, dupMin:30, eveningHour:18, vanStaleHrs:12 };
 function opsNum(k, def){ const v = +OPS[k]; return isFinite(v) && v > 0 ? v : def; }
@@ -568,22 +560,15 @@ let SIGDOCS = Object.assign({}, DEFAULT_SIGDOCS);
 /* multi-stop (v6.14): Round Trips may carry a second drop-off. For those, trip miles are the
    WHOLE loop (pickup → drop 1 → drop 2 → back to pickup), so the round-trip ×2 must NOT apply. */
 function hasStop(l){ return l.tripType==='Round Trip' && !!String(l.stopAddr||'').trim(); }
+/* Legacy UI adapters: read current settings at call time, never snapshot them. */
 function suggestPrice(tripType, officeMiles, tripMiles, stopTrip, kind){
-  const P = priceSet(kind);
-  const om = +officeMiles||0, tm = +tripMiles||0;
-  const load = tripType==='Round Trip' ? P.roundLoad : P.oneWayLoad;
-  const loaded = stopTrip ? tm : (tripType==='Round Trip' ? tm*2 : tm);
-  return load + om*P.officePerMile + loaded*P.tripPerMile;
+  return window.RMTBilling.suggestPrice(tripType, officeMiles, tripMiles, stopTrip, kind, PRICES);
 }
-function waitBill(mins, kind){ if(!mins || mins<=0) return 0; return Math.ceil(mins/15)*priceSet(kind).waitPer15; }
-function estWaitMins(l){ return (+l.waitH||0)*60 + (+l.waitM||0); }
-function waitChargeOf(l){
-  /* owner rule (v6.14): waits at BOTH stops are added together and billed as ONE group */
-  if(l.actualWaitMin != null || l.actualWaitMin2 != null) return waitBill((+l.actualWaitMin||0) + (+l.actualWaitMin2||0), l.tripKind);
-  return l.waiting==='Yes' ? waitBill(estWaitMins(l), l.tripKind) : 0;
-}
-function rentFee(l){ return (l.rentWheelchair && (l.tripKind||'Wheelchair')==='Wheelchair') ? +(PRICES.wheelchairRent!=null?PRICES.wheelchairRent:30) : 0; }
-function totalCharge(l){ return waitChargeOf(l) + (+l.tripCharge||0) + rentFee(l); }
+function waitBill(mins, kind){ return window.RMTBilling.waitBill(mins, kind, PRICES); }
+function estWaitMins(l){ return window.RMTBilling.estWaitMins(l); }
+function waitChargeOf(l){ return window.RMTBilling.waitChargeOf(l, PRICES); }
+function rentFee(l){ return window.RMTBilling.rentFee(l, PRICES); }
+function totalCharge(l){ return window.RMTBilling.totalCharge(l, PRICES); }
 function payMethodLabel(m){
   return m==='card' ? 'card charge' : m==='invoice' ? 'Square invoice' : m==='zelle' ? 'Zelle' : m==='historical' ? 'history (pre-app)' : (m||'recorded');
 }
