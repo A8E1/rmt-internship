@@ -25,4 +25,5 @@ export default [
     },
   },
   { files: ['sw.js'], languageOptions: { globals: globals.serviceworker } },
+  { files: ['supabase/functions/**/*.js'], languageOptions: { globals: { ...globals.browser, Deno: 'readonly' } } },
 ];

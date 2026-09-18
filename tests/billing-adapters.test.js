@@ -44,8 +44,8 @@ describe('current legacy billing adapters', () => {
     expect(startup).toContain("import * as billing from '/src/lib/billing.js';");
     expect(index.indexOf('src="/js/settings.js"')).toBeLessThan(index.indexOf('<script type="module">'));
     let boots = 0;
-    const ctx = { billing, window: {}, boot() { expect(ctx.window.RMTBilling).toBe(billing); boots++; } };
-    vm.runInNewContext(startup.replace(/^import .*;\s*$/m, ''), ctx);
+    const ctx = { billing, maps: {}, window: {}, boot() { expect(ctx.window.RMTBilling).toBe(billing); expect(ctx.window.RMTMaps).toBe(ctx.maps); boots++; } };
+    vm.runInNewContext(startup.replace(/^import .*;\s*$/gm, ''), ctx);
     expect(boots).toBe(1);
     expect(readFileSync(new URL('../js/settings.js', import.meta.url), 'utf8')).not.toMatch(/^boot\(\);/m);
   });

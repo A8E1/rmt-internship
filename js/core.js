@@ -284,7 +284,11 @@ function applyTable(t, data){
     data.forEach(r=>{
       const v = (r.value && r.value.data!==undefined) ? r.value.data : r.value;
       if(r.key==='prices' && v) PRICES = Object.assign({}, DEFAULT_PRICES, v);
-      if(r.key==='ops' && v) OPS = Object.assign({}, DEFAULT_OPS, v);
+      if(r.key==='ops' && v){
+        // Only import known nonsecret settings; old extra fields are not retained.
+        OPS = Object.fromEntries(Object.keys(DEFAULT_OPS).map(k=>[k, Object.hasOwn(v,k) ? v[k] : DEFAULT_OPS[k]]));
+        OPS.mapsEnabled = v.mapsEnabled === true;
+      }
       if(r.key==='square' && v) SQ = Object.assign({}, DEFAULT_SQ, v);
       if(r.key==='sms' && v){ SMSCFG = Object.assign({}, DEFAULT_SMS, v); SMSCFG.seq = Object.assign({}, DEFAULT_SMS.seq, v.seq||{}); }
       if(r.key==='sigdocs' && v) SIGDOCS = Object.assign({}, DEFAULT_SIGDOCS, v);
@@ -480,7 +484,7 @@ const DEFAULT_PRICES = { oneWayLoad:85, roundLoad:100, officePerMile:1, tripPerM
   strOneWayLoad:null, strRoundLoad:null, strOfficePerMile:null, strTripPerMile:null, strWaitPer15:null };
 function priceSet(kind){ return window.RMTBilling.priceSet(kind, PRICES); }
 let PRICES = Object.assign({}, DEFAULT_PRICES);
-const DEFAULT_OPS = { buffer:10, gkey:'', clashMin:45, conflictMin:90, dupMin:30, eveningHour:18, vanStaleHrs:12 };
+const DEFAULT_OPS = { buffer:10, mapsEnabled:false, clashMin:45, conflictMin:90, dupMin:30, eveningHour:18, vanStaleHrs:12 };
 function opsNum(k, def){ const v = +OPS[k]; return isFinite(v) && v > 0 ? v : def; }
 let OPS = Object.assign({}, DEFAULT_OPS);
 const DEFAULT_SQ = { appId:'', locationId:'', env:'production' };
@@ -798,3 +802,6 @@ function getAvail(id){
   if(!availability[id]) availability[id] = Array.from({length:7},()=>({office:'', avail:true, from:'', to:''}));
   return availability[id];
 }
+
+/* Single legacy adapter for all authenticated map requests. */
+function mapsRequest(action, payload){ return window.RMTMaps.requestMaps(sb, action, payload); }

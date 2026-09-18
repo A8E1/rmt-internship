@@ -241,8 +241,8 @@ async function savePrices(){
 function opsHTML(){
   return `
     <div class="fgroup"><label>Report-Time Buffer (minutes)</label><input id="op-buf" type="number" value="${OPS.buffer}"></div>
-    <div class="fgroup"><label>Google Maps API Key</label><input id="op-key" value="${esc(OPS.gkey||'')}" autocomplete="off" placeholder="Paste key with Places (New) + Routes enabled"></div>
-    <div class="hint" style="margin-bottom:12px">Powers address autocomplete and automatic office report times (report time = first pickup − drive time − buffer, rounded to 5 min). In Google Cloud, restrict the key to your website address (HTTP referrers) and to the Places API (New) + Routes API only.</div>
+    <div class="fgroup"><label><input id="op-maps" type="checkbox" style="width:auto" ${OPS.mapsEnabled?'checked':''}> Enable automatic map lookups</label></div>
+    <div class="hint" style="margin-bottom:12px">Enables address suggestions, mileage, and drive estimates. Your administrator must configure the service before enabling it.</div>
     <button class="btn-mini ghost" style="margin-bottom:10px" onclick="testMaps()">Test Maps Connection</button>
     <div class="fsection">Operating Rules</div>
     <div class="hint" style="margin-bottom:10px">These were fixed values until now. Change them only if the day-to-day tells you to.</div>
@@ -259,7 +259,7 @@ function opsHTML(){
 }
 async function saveOps(){
   const prevOps = OPS;
-  OPS = {buffer: +$('op-buf').value || 10, gkey: $('op-key').value.trim(),
+  OPS = {buffer: +$('op-buf').value || 10, mapsEnabled: $('op-maps').checked,
     clashMin: +$('op-clash').value || 45, conflictMin: +$('op-conf').value || 90,
     dupMin: +$('op-dup').value || 30,
     eveningHour: Math.min(23, Math.max(0, $('op-eve').value === '' ? 18 : +$('op-eve').value)),
@@ -268,13 +268,11 @@ async function saveOps(){
   modal=null; render(); toast('Trip timing settings saved');
 }
 async function testMaps(){
-  const key = $('op-key').value.trim();
-  if(!key){ toast('Paste a key first'); return; }
-  const saved = OPS.gkey; OPS.gkey = key;
   toast('Testing Maps connection…');
-  const d = await routesDuration(OFFICE, '901 Bagby St, Houston, TX 77002');
-  OPS.gkey = saved;
-  toast(d != null ? `✓ Maps working — office to Houston City Hall: ~${d} min` : 'Test failed — check APIs enabled, billing, and key restrictions');
+  try{
+    const result = await mapsRequest('mileage', {origin:OFFICE, destination:'901 Bagby St, Houston, TX 77002'});
+    toast(result.routes && result.routes.length ? '✓ Maps connection works' : 'No route found — check the service configuration');
+  }catch{ toast('Maps unavailable — check your sign-in and service configuration'); }
 }
 function passwdHTML(){
   return `
