@@ -1,4 +1,4 @@
-// Pass A: original arithmetic preserved; pricing is supplied by the caller.
+// Pricing is supplied by the caller. Intentional Pass C corrections are documented in SPEC.md.
 function pnum(v, fb){ const n = +v; return (v != null && v !== '' && isFinite(n) && n >= 0) ? n : fb; }
 export function priceSet(kind, prices){
   if(kind === 'Stretcher'){
@@ -23,4 +23,14 @@ export function waitChargeOf(l, prices){
   return l.waiting==='Yes' ? waitBill(estWaitMins(l), l.tripKind, prices) : 0;
 }
 export function rentFee(l, prices){ return (l.rentWheelchair && (l.tripKind||'Wheelchair')==='Wheelchair') ? +(prices.wheelchairRent!=null?prices.wheelchairRent:30) : 0; }
-export function totalCharge(l, prices){ return waitChargeOf(l, prices) + (+l.tripCharge||0) + rentFee(l, prices); }
+// Shift the decimal exponent rather than multiplying by 100: 1.005 * 100
+// loses the half-cent in binary floating point. Round signed ties away from zero.
+// Inputs and aggregate cents must be within Number's safe-integer range.
+function cents(value){
+  const amount = +value||0;
+  const [coefficient, exponent = '0'] = Math.abs(amount).toString().split('e');
+  return Math.sign(amount) * Math.round(Number(coefficient + 'e' + (Number(exponent) + 2)));
+}
+export function totalCharge(l, prices){
+  return (cents(waitChargeOf(l, prices)) + cents(l.tripCharge) + cents(rentFee(l, prices))) / 100;
+}
