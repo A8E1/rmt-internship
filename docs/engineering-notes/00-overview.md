@@ -5,7 +5,8 @@ Execution order is correctness → CI enforcement → security migration.
 
 - Done in Pass A: preserve the original source in Git, specify scope, extract pure
   billing logic, and verify equivalence offline.
-- Next: Vitest characterization cases, then adversarial tests and confirmed fixes.
+- Done in Pass B: 20 passing Vitest characterization cases and a reproducible npm lockfile.
+- Next: adversarial tests and confirmed fixes, with separate failure/fix evidence.
 - Pending: push/PR lint and test jobs; verify required status checks actually enforce
   merges. A workflow alone is not a merge gate and does not gate every push.
 - Pending: authenticated Edge Function and one client wrapper for Google API access.

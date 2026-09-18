@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "verify:extraction": "node scripts/verify-billing-extraction.mjs"
+    "verify:extraction": "node scripts/verify-billing-extraction.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "6.4.3",
+    "vitest": "4.1.11"
   }
 }
