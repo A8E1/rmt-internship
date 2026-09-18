@@ -1,34 +1,28 @@
-# Billing suite — Pass C: adversarial regressions
+# CI: lint, tests, and required status checks
 
-## Scope and intended behavior
-Investigate and correct three concrete replica defects with failing tests before
-each fix. This is not a claim about production incidents or an owner-approved tariff.
-1. Numeric load-fee strings must produce the same numeric quote as numbers.
-2. Negative office or loaded mileage is treated as zero, not a discount. Existing
-   zero/null handling remains. This is a tolerant replica input policy, not a new fee.
-3. totalCharge adds integer cents for trip, combined waiting, and rental components.
-   Round each monetary component to nearest cent, ties away from zero, then sum.
-   Rates/mileage calculations retain precision until a billed component is formed.
-   Dollar numbers remain the public return type. Signed monetary adjustments remain.
-   Supported money inputs are finite amounts whose cents and sum are safe integers.
+## Scope
+On ci/github-actions, add ESLint and .github/workflows/ci.yml. Run on every push and
+pull_request with independent lint and test jobs, Node 22, npm cache, and npm ci.
+The test job runs vitest run via npm test. Preserve all billing evidence commits.
 
 ## Boundaries
-No invented 50-mile tier or after-hours tariff. Preserve the existing combined-stop
-wait rule and the minutes/hours conversion. No CI, proxy, backend calls, key changes,
-deployment, or unrelated UI refactor. Do not alter source snapshots outside this repo.
+No billing behavior changes, production deployment, backend access, secrets, proxy,
+or broad legacy cleanup. Do not change repository visibility or purchase a GitHub plan.
+Do not disable existing branch protections. Do not claim enforcement without readback.
 
 ## Acceptance criteria
-- Commit this spec before tests. For each defect: commit a failing regression,
-  record the failure, then fix and commit with a passing result.
-- Keep the Pass B golden master at commit 3850d53; update only affected current
-  expectations and clearly identify intentional behavior changes.
-- Keep a historical extraction command checking the immutable Pass A snapshot;
-  do not compare intentionally corrected code against buggy outputs and call it parity.
-- Run the full Vitest suite after each fix. Test current adapters and rounding cases.
-- Maintain four entry-point describe blocks and table-driven boundary inputs.
-- Update learning notes and reviewer explanation with commit and test evidence.
-- Leave PR #1 unmerged. UI/backend integration remains outside the verified claims.
+- npm run lint checks all tracked JavaScript, including legacy scripts; use recommended
+  ESLint rules for new modules/tests/tools and document any legacy-specific exceptions.
+- npm test passes the 36 current cases. Commit the npm dependency lockfile.
+- Both named jobs succeed on GitHub for the current PR revision.
+- After successful checks, configure main to require lint and test and verify readback.
+  Require a PR, include admins, prohibit force pushes/deletion, and require up-to-date
+  checks if repository capabilities permit. Preserve stronger existing settings.
+- If GitHub access or plan limitations block protection, document the exact response
+  and distinguish a working workflow from enforced status checks; ask the user only
+  for an external decision that cannot be completed within the current scope.
+- Keep this in one CI PR with reviewer and learning notes. No auto-deployment.
 
-## Follow-on work
-After billing review: CI and required checks, then authenticated Google API proxy.
-Real key rotation remains simulated only. Production remediation is not claimed.
+## Prior work
+PR #1 merged with its individual commits retained. Pass C scope is archived at
+docs/specs/pass-c.md. CI is implemented before the subsequent security refactor.
