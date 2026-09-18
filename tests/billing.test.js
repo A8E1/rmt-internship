@@ -9,7 +9,7 @@ const rates = Object.freeze({
   strTripPerMile: null, strWaitPer15: null,
 });
 
-// Pass B records outputs. Cases labeled "observed quirk" are not business policy.
+// Pass B golden master: 3850d53. Pass C updates intentional corrections in separate commits.
 describe('suggestPrice — current quote behavior', () => {
   it.each([
     ['one way includes office and loaded miles', 'One Way', 5, 10, false, 'Wheelchair', {}, 130],
@@ -17,7 +17,8 @@ describe('suggestPrice — current quote behavior', () => {
     ['multi-stop mileage already describes the whole loop', 'Round Trip', 5, 25, true, 'Wheelchair', {}, 205],
     ['stretcher uses configured overrides', 'One Way', 5, 10, false, 'Stretcher', { strOneWayLoad: 125, strOfficePerMile: 2, strTripPerMile: 6 }, 195],
     ['observed quirk: negative miles reduce the quote', 'One Way', -5, 10, false, 'Wheelchair', {}, 120],
-    ['observed quirk: a string load fee concatenates', 'One Way', 5, 10, false, 'Wheelchair', { oneWayLoad: '85' }, '85540'],
+    ['numeric string load fee must return a numeric quote', 'One Way', 5, 10, false, 'Wheelchair', { oneWayLoad: '85' }, 130],
+    ['round-trip string load fee must return a numeric quote', 'Round Trip', '5', '10', false, 'Wheelchair', { roundLoad: '100' }, 185],
   ])('%s', (_label, type, office, trip, stop, kind, overrides, expected) => {
     expect(suggestPrice(type, office, trip, stop, kind, { ...rates, ...overrides })).toBe(expected);
   });
