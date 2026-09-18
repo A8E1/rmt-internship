@@ -1,0 +1,8 @@
+/index.html
+  Cache-Control: no-cache, must-revalidate
+/
+  Cache-Control: no-cache, must-revalidate
+/js/*
+  Cache-Control: no-cache, must-revalidate
+/styles.css
+  Cache-Control: no-cache, must-revalidate
