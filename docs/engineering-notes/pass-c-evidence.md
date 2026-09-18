@@ -11,3 +11,6 @@ Green: 21 passed after coercing the selected loading fee to a number.
 ## Defect 2: negative mileage
 Red: 2 failed / 22 passed. Negative office mileage produced 120 instead of 125; negative round-trip mileage produced 25 instead of 105.
 Green: 24 passed after clamping each distance to zero or greater; null/zero mileage still retains the load fee.
+
+## Defect 3: money aggregation
+Red: 6 failed / 24 passed. Float residue, positive/negative half-cent amounts, rounding components before totals, and tiny amounts violated the replica cent-denominated contract. The combined-wait rounding case already passed.

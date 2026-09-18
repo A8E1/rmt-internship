@@ -56,7 +56,13 @@ describe('totalCharge — current aggregation', () => {
     ['both stops are combined before rounding', { tripCharge: 100, actualWaitMin: 7, actualWaitMin2: 7 }, {}, 111.25],
     ['recorded zero wait overrides an hour estimate', { tripCharge: 85, waiting: 'Yes', waitH: 1, actualWaitMin: 0 }, {}, 85],
     ['estimated hours are converted to minutes', { tripCharge: 85, waiting: 'Yes', waitH: 1, waitM: 1 }, {}, 141.25],
-    ['observed quirk: fractional money retains float residue', { tripCharge: 0.1, rentWheelchair: true }, { wheelchairRent: 0.2 }, 0.30000000000000004],
+    ['decimal amounts sum to a cent-denominated total', { tripCharge: 0.1, rentWheelchair: true }, { wheelchairRent: 0.2 }, 0.3],
+    ['half-cent trip amount rounds up', { tripCharge: 1.005 }, {}, 1.01],
+    ['binary-sensitive half-cent amount rounds up', { tripCharge: 10.075 }, {}, 10.08],
+    ['components round before aggregation', { tripCharge: 0.005, rentWheelchair: true }, { wheelchairRent: 0.005 }, 0.02],
+    ['negative adjustments round symmetrically', { tripCharge: -1.005 }, {}, -1.01],
+    ['tiny scientific-notation amounts round to zero', { tripCharge: 1e-7 }, {}, 0],
+    ['combined waiting is rounded as one monetary component', { actualWaitMin: 16 }, { waitPer15: 0.335 }, 0.67],
   ])('%s', (_label, lead, overrides, expected) => {
     expect(totalCharge(lead, { ...rates, ...overrides })).toBe(expected);
   });
