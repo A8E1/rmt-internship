@@ -26,3 +26,9 @@ Do not disable existing branch protections. Do not claim enforcement without rea
 ## Prior work
 PR #1 merged with its individual commits retained. Pass C scope is archived at
 docs/specs/pass-c.md. CI is implemented before the subsequent security refactor.
+
+## Confirmed enforcement limitation
+GitHub returned HTTP 403 requiring Pro or public visibility for private-repository
+branch protection. The user chose to keep the repo private and document the limitation.
+Do not enable or claim required checks in this phase. Node 22.13+ is required for
+the supported ESLint toolchain; the older system runtime is not modified.

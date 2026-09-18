@@ -6,20 +6,25 @@ changes. Original import: 3cf1f50; pure extraction: 6fdb96a; golden master: 3850
 
 ## Verification
 
+Use Node 22.13+ or 24+; .nvmrc selects Node 22.
+
 - npm ci installs the exact development dependencies.
+- npm run lint checks JavaScript with ESLint.
 - npm test runs current billing and adapter regression tests offline.
 - npm run test:watch reruns tests during editing.
 - npm run verify:extraction-history checks the immutable Pass A snapshot against the
   original import. This proves historical extraction parity, not current correctness.
   It requires these commits in the local Git history.
 
-Tested on Node 20.17.0 with Vitest 4.1.11 and Vite 6.4.3. Vite is a test dependency;
+Vitest 4.1.11 and Vite 6.4.3 remain pinned. Vite is a test dependency;
 the app still uses its original scripts. Billing tests use synthetic data only.
 
 Pass C intentionally fixes numeric-string loading fees, negative-distance discounts,
 and cent aggregation under the replica rules in SPEC.md. See docs/engineering-notes/
 for learning artifacts, review explanations, and failing-test/fix commit evidence.
-CI and the authenticated Google API proxy are subsequent work. Rotation is simulated.
+CI runs lint and tests on push and pull_request. Required-check enforcement is
+unavailable on the current private-repository plan; see docs/engineering-notes/ci-review.md.
+The authenticated Google API proxy is subsequent work. Rotation is simulated.
 
 The imported app still references its original Supabase backend. Configure an isolated
 backend before interactive use. No browser/live-data validation or deployment is claimed.
