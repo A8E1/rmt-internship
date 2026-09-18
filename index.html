@@ -25,5 +25,10 @@
 <script src="/js/admin.js"></script>
 <script src="/js/driver.js"></script>
 <script src="/js/settings.js"></script>
+<script type="module">
+import * as billing from '/src/lib/billing.js';
+window.RMTBilling = billing;
+boot();
+</script>
 </body>
 </html>

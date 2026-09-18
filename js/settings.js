@@ -505,5 +505,4 @@ document.addEventListener('visibilitychange', async ()=>{
   }
 });
 
-boot();
-
+/* index.html starts the app after the billing module is ready. */
