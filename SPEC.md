@@ -1,36 +1,28 @@
-# Billing suite — Pass A
+# Billing suite — Pass B: characterization
 
 ## Scope
-Extract suggestPrice, waitBill, rentFee, and totalCharge from js/core.js into
-src/lib/billing.js as a pure ES module. Move the helpers they need with them.
-Pass the current pricing object explicitly. Keep legacy global function signatures
-through thin adapters so existing screens continue to work.
+Add Vitest and a committed npm lockfile. Write literal expected-output cases for
+suggestPrice, waitBill, rentFee, and totalCharge in tests/billing.test.js.
+Use one describe block per entry point and it.each for table-driven examples.
+These tests record existing behavior, including quirks; they do not approve every
+observed behavior as a business rule. Pass A's scope is archived in docs/specs/pass-a.md.
 
 ## Do not touch
-Preserve behavior exactly, including coercion, defaults, negative inputs, floating
-point results, and combining waits before rounding. No bug fixes, new billing
-rules, Vitest characterization tests, CI, proxy implementation, or production calls
-in this pass. Do not modify the original source snapshot or project sources.
-Do not deploy, rotate real keys, or claim production remediation.
+No production JavaScript, HTML, billing fixes, CI, Edge Function, live credentials,
+backend calls, or deployment changes. Do not invent mileage tiers or surcharges.
+Leave the existing PR in draft. Pass C is a separate session and commit sequence.
 
 ## Acceptance criteria
-- The module reads no DOM, mutable app state, network, storage, or current clock.
-- Rates are function arguments; there is no date-dependent billing in this code.
-- Legacy adapters pass the latest PRICES object on every invocation.
-- Load the module before boot can invoke billing, preserving classic-script globals.
-- Compare extracted results to immutable baseline 3cf1f508616b901071b04ef24b17e03e6b9c349e, including awkward
-  inputs, without contacting Supabase or Google. Check syntax and startup ordering.
-- Commit this specification before implementation; commit extraction independently.
-- Provide reviewer notes and a learning artifact with accurate completion status.
+- npm test runs vitest run and all characterization cases pass.
+- Cases use explicit expected values, not formulas copied from the implementation.
+- Cover ordinary quotes, waiting intervals, rental eligibility, combined-stop waiting,
+  recorded-versus-estimated waiting, and representative existing arithmetic quirks.
+- Mark quirks as observations, not intended policy; no claim of bugs fixed.
+- npm run verify:extraction still passes against the original commit.
+- npm ci can reproduce the installed development dependencies from the lockfile.
+- Commit this specification before tests and tooling; update learning/reviewer notes.
 
-## Later sessions
-Pass B adds passing characterization cases. Pass C adds adversarial cases against
-documented expectations, retaining failing-test and fix evidence for each confirmed
-bug. Do not invent three bugs, a 50-mile tier, or an after-hours surcharge.
-After the billing PR: ci/github-actions, then security/edge-function-proxy.
-Each bullet gets one PR and a SPEC update before its work begins.
-
-## Scope agreed with the user
-This is a replica exercise. Actual key rotation is simulated and documented only.
-Live secret installation, deployment, and production verification remain unperformed.
-The original snapshot references a live backend; verification must stay offline.
+## Following work
+Pass C evaluates adversarial cases against explicit intended behavior, then records
+failing tests and fixes for confirmed bugs. CI and security follow in their own PRs.
+Key rotation remains a simulation; no production security claim is supported.
