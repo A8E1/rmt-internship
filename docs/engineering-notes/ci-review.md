@@ -29,5 +29,5 @@ branch and PR, enforce for admins, and prohibit force pushes and branch deletion
 Verify those settings by readback before claiming enforcement.
 
 ## Verification
-GitHub run results will be recorded after the CI PR runs. Current application behavior
+GitHub PR run 35317806017 completed successfully for commit f040355: both lint and test passed, including npm ci in each job. Evidence: https://github.com/A8E1/rmt-internship/actions/runs/35317806017 . Local clean install, lint, 36 tests, and diff checks also passed. Current application behavior
 is covered by the existing 36 tests; no browser or live-backend verification is claimed.
