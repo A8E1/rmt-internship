@@ -10,7 +10,7 @@ export function priceSet(kind, prices){
 }
 export function suggestPrice(tripType, officeMiles, tripMiles, stopTrip, kind, prices){
   const P = priceSet(kind, prices);
-  const om = +officeMiles||0, tm = +tripMiles||0;
+  const om = Math.max(0, +officeMiles||0), tm = Math.max(0, +tripMiles||0);
   const load = +(tripType==='Round Trip' ? P.roundLoad : P.oneWayLoad)||0;
   const loaded = stopTrip ? tm : (tripType==='Round Trip' ? tm*2 : tm);
   return load + om*P.officePerMile + loaded*P.tripPerMile;
