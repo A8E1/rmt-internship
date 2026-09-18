@@ -16,7 +16,10 @@ describe('suggestPrice — current quote behavior', () => {
     ['round trip doubles loaded miles', 'Round Trip', 5, 10, false, 'Wheelchair', {}, 185],
     ['multi-stop mileage already describes the whole loop', 'Round Trip', 5, 25, true, 'Wheelchair', {}, 205],
     ['stretcher uses configured overrides', 'One Way', 5, 10, false, 'Stretcher', { strOneWayLoad: 125, strOfficePerMile: 2, strTripPerMile: 6 }, 195],
-    ['observed quirk: negative miles reduce the quote', 'One Way', -5, 10, false, 'Wheelchair', {}, 120],
+    ['negative office mileage cannot discount a quote', 'One Way', -5, 10, false, 'Wheelchair', {}, 125],
+    ['negative loaded mileage cannot discount a round trip', 'Round Trip', 5, -10, false, 'Wheelchair', {}, 105],
+    ['null mileage retains the loading fee', 'One Way', null, null, false, 'Wheelchair', {}, 85],
+    ['zero mileage retains the loading fee', 'One Way', 0, 0, false, 'Wheelchair', {}, 85],
     ['numeric string load fee must return a numeric quote', 'One Way', 5, 10, false, 'Wheelchair', { oneWayLoad: '85' }, 130],
     ['round-trip string load fee must return a numeric quote', 'Round Trip', '5', '10', false, 'Wheelchair', { roundLoad: '100' }, 185],
   ])('%s', (_label, type, office, trip, stop, kind, overrides, expected) => {
