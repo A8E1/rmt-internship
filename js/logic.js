@@ -23,20 +23,12 @@ function _uses288Express(r){
   return false;
 }
 async function _routesCall(origin, destination, avoidTolls){
-  /* origin may be an address string OR {lat,lng} (live van position) */
-  const orig = (origin && typeof origin === 'object') ? {location:{latLng:{latitude:+origin.lat, longitude:+origin.lng}}} : {address:origin};
-  const body = {origin:orig, destination:{address:destination}, travelMode:'DRIVE', computeAlternativeRoutes:!avoidTolls};
-  if(avoidTolls) body.routeModifiers = {avoidTolls:true};
-  const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-    method:'POST',
-    headers:{'Content-Type':'application/json', 'X-Goog-Api-Key':OPS.gkey, 'X-Goog-FieldMask':'routes.duration,routes.legs.steps.navigationInstruction'},
-    body: JSON.stringify(body)
-  });
-  const j = await res.json();
+  const point = origin && typeof origin==='object' ? {lat:+origin.lat, lng:+origin.lng} : origin;
+  const j = await mapsRequest('duration', {origin:point, destination, avoidTolls});
   return j.routes || [];
 }
 async function routesDuration(origin, destination){
-  if(!OPS.gkey || !origin || !destination) return null;
+  if(!OPS.mapsEnabled || !origin || !destination) return null;
   try{
     let ok = (await _routesCall(origin, destination, false)).filter(r=>!_uses288Express(r));
     if(!ok.length) ok = await _routesCall(origin, destination, true);
@@ -51,7 +43,7 @@ async function recomputeReportTime(driverId, day){
   if(row && row.manual) return; /* admin override wins */
   const dayLeads = leads.filter(l=>l.status==='Confirmed' && l.date===day && l.driverId===driverId && l.pickupTime);
   let rt = '';
-  if(dayLeads.length && OPS.gkey){
+  if(dayLeads.length && OPS.mapsEnabled){
     const first = dayLeads.reduce((a,b)=>a.pickupTime<=b.pickupTime?a:b);
     const dur = await routesDuration(OFFICE, first.pickup);
     if(dur != null){
@@ -169,7 +161,7 @@ async function sendOnMyWay(leadId, leg){
     const van = vehicles.find(v=>v.driverId===currentUser.id && v.active!==false);
     const loc = van ? vehicleLocs.find(x=>x.imei===van.imei) : null;
     const dest = leg==='ret' ? ((hasStop(l) ? l.stopAddr : l.dropoff) || l.pickup) : l.pickup;
-    if(loc && loc.lat!=null && OPS.gkey && dest){
+    if(loc && loc.lat!=null && OPS.mapsEnabled && dest){
       const sec = await routesDuration({lat:loc.lat, lng:loc.lng}, dest);
       if(sec){ const t = new Date(Date.now() + sec*1000 + (opsNum('buffer',10)*0)); etaTxt = ' and should arrive around ' + t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
     }

@@ -1,34 +1,39 @@
-# CI: lint, tests, and required status checks
+# Authenticated Google API proxy
 
 ## Scope
-On ci/github-actions, add ESLint and .github/workflows/ci.yml. Run on every push and
-pull_request with independent lint and test jobs, Node 22, npm cache, and npm ci.
-The test job runs vitest run via npm test. Preserve all billing evidence commits.
+Replace direct browser Google Places/Routes requests with one mapsRequest adapter
+and one ES-module client wrapper calling the maps-proxy Supabase Edge Function.
+Support autocomplete, billing mileage, and drive-time route alternatives.
 
-## Boundaries
-No billing behavior changes, production deployment, backend access, secrets, proxy,
-or broad legacy cleanup. Do not change repository visibility or purchase a GitHub plan.
-Do not disable existing branch protections. Do not claim enforcement without readback.
+## Security contract
+- Validate Authorization with supabase.auth.getUser(token); reject missing, invalid,
+  expired, or anonymous users before any Google request.
+- Require an active admin/driver profile from the existing profiles table via the
+  caller-scoped client. RLS/role-management integrity must be verified before deployment.
+- Fix upstream URLs, field masks, travel mode, and autocomplete bias on the server.
+  Validate action, sizes, address/coordinate types, and optional toll flag.
+- Use GOOGLE_MAPS_API_KEY from the function environment only. No service-role key.
+  Fail closed on missing configuration, auth/profile failures, and invalid requests.
+- Restrict browser origins, allow CORS preflight without auth, and do not forward
+  auth headers or raw upstream errors/responses. Bound request size and upstream timeout.
+- Remove browser key editing and persistence. Load only known nonsecret settings.
+  Supply an unapplied SQL cleanup for previously stored ops keys.
+
+## Behavior and boundaries
+Preserve mileage conversion, route selection/toll fallback, duration units, address
+suggestions, manual mileage overrides, and billing calculations. Maps defaults off
+until a test deployment is configured. Keep the existing non-map app functionality.
+No production calls, real key rotation, deployment, database migration execution,
+or new caching/data-retention feature. No quota-savings or production-remediation claim.
+CI remains automatic but unenforced due to the agreed private-repo plan limitation.
 
 ## Acceptance criteria
-- npm run lint checks all tracked JavaScript, including legacy scripts; use recommended
-  ESLint rules for new modules/tests/tools and document any legacy-specific exceptions.
-- npm test passes the 36 current cases. Commit the npm dependency lockfile.
-- Both named jobs succeed on GitHub for the current PR revision.
-- After successful checks, configure main to require lint and test and verify readback.
-  Require a PR, include admins, prohibit force pushes/deletion, and require up-to-date
-  checks if repository capabilities permit. Preserve stronger existing settings.
-- If GitHub access or plan limitations block protection, document the exact response
-  and distinguish a working workflow from enforced status checks; ask the user only
-  for an external decision that cannot be completed within the current scope.
-- Keep this in one CI PR with reviewer and learning notes. No auto-deployment.
-
-## Prior work
-PR #1 merged with its individual commits retained. Pass C scope is archived at
-docs/specs/pass-c.md. CI is implemented before the subsequent security refactor.
-
-## Confirmed enforcement limitation
-GitHub returned HTTP 403 requiring Pro or public visibility for private-repository
-branch protection. The user chose to keep the repo private and document the limitation.
-Do not enable or claim required checks in this phase. Node 22.13+ is required for
-the supported ESLint toolchain; the older system runtime is not modified.
+- Inventory all direct calls and gating references before edits, and verify none
+  remain in browser code afterward.
+- Mocked tests prove unauthorized/disabled-user/invalid-input requests cannot reach
+  Google and cover allowed requests, upstream failures, CORS, wrapper auth, and
+  mileage/time conversion plus existing route-selection behavior.
+- npm run lint and npm test pass locally and both jobs pass on the PR revision.
+- Document placeholder setup, required profile permissions, unapplied cleanup,
+  simulated rotation, security limitations, and exact validation scope.
+- Keep changes in one PR with reviewer explanation and a learning artifact.

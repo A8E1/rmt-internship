@@ -135,11 +135,11 @@ function leadFormHTML(l){
 
     <div class="fsection">Trip Details</div>
     <datalist id="addr-list">${addressOptions()}</datalist>
-    <div class="fgroup"><label>Pickup Address</label><input id="f-pickup" ${OPS.gkey?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.pickup)}"></div>
-    <div class="fgroup"><label>Drop-off Address</label><input id="f-dropoff" ${OPS.gkey?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.dropoff)}"></div>
+    <div class="fgroup"><label>Pickup Address</label><input id="f-pickup" ${OPS.mapsEnabled?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.pickup)}"></div>
+    <div class="fgroup"><label>Drop-off Address</label><input id="f-dropoff" ${OPS.mapsEnabled?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.dropoff)}"></div>
     <div id="stop-area" style="display:${l.tripType==='Round Trip'?'block':'none'}">
-      <div class="fgroup"><label>Second Drop-off (optional — adds a third leg)</label><input id="f-stop" ${OPS.gkey?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.stopAddr||'')}"></div>
-      <div class="fgroup"><label>Return to a different address (optional)</label><input id="f-retdrop" ${OPS.gkey?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.returnDropoff||'')}"></div>
+      <div class="fgroup"><label>Second Drop-off (optional — adds a third leg)</label><input id="f-stop" ${OPS.mapsEnabled?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.stopAddr||'')}"></div>
+      <div class="fgroup"><label>Return to a different address (optional)</label><input id="f-retdrop" ${OPS.mapsEnabled?'':'list="addr-list"'} oninput="acSuggest(this)" onchange="addrChanged()" autocomplete="off" value="${esc(l.returnDropoff||'')}"></div>
     </div>
     <div style="display:flex;gap:8px;margin:-4px 0 13px">
       <button type="button" class="btn-mini ghost" onclick="seeTrip('office')">Office → Pickup</button>
@@ -290,7 +290,7 @@ function updRepCount(){
 let acToken = null, acTimer = null;
 function acNewToken(){ acToken = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)); }
 function acSuggest(inp){
-  if(!OPS.gkey) return;
+  if(!OPS.mapsEnabled) return;
   if(!inp._acBlur){
     inp._acBlur = true;
     inp.addEventListener('blur', ()=>setTimeout(()=>{ const b = inp.parentElement.querySelector('.ac-list'); if(b) b.remove(); }, 250));
@@ -302,13 +302,7 @@ function acSuggest(inp){
   acTimer = setTimeout(async ()=>{
     if(!acToken) acNewToken();
     try{
-      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-        method:'POST',
-        headers:{'Content-Type':'application/json', 'X-Goog-Api-Key':OPS.gkey},
-        body: JSON.stringify({input:q, sessionToken:acToken, regionCode:'US',
-          locationBias:{circle:{center:{latitude:29.55, longitude:-95.32}, radius:50000}}})
-      });
-      const j = await res.json();
+      const j = await mapsRequest('autocomplete', {input:q, sessionToken:acToken});
       const sugg = (j.suggestions||[])
         .map(x=>x.placePrediction && x.placePrediction.text && x.placePrediction.text.text)
         .filter(Boolean).slice(0,5);
@@ -333,14 +327,9 @@ function waitToggle(){ $('wait-area').style.display = $('f-waiting').value==='Ye
 
 /* ===== MILEAGE AUTOFILL (billing miles come from Google's preferred route) ===== */
 async function routesMiles(origin, destination){
-  if(!OPS.gkey || !origin || !destination) return null;
+  if(!OPS.mapsEnabled || !origin || !destination) return null;
   try{
-    const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-      method:'POST',
-      headers:{'Content-Type':'application/json', 'X-Goog-Api-Key':OPS.gkey, 'X-Goog-FieldMask':'routes.distanceMeters'},
-      body: JSON.stringify({origin:{address:origin}, destination:{address:destination}, travelMode:'DRIVE'})
-    });
-    const j = await res.json();
+    const j = await mapsRequest('mileage', {origin, destination});
     const m = j.routes && j.routes[0] && j.routes[0].distanceMeters;
     if(!m) return null;
     return Math.round(m/1609.344*10)/10;
@@ -350,7 +339,7 @@ let milesReq = 0;
 async function autoMiles(){
   const om = $('f-officemiles'), tm = $('f-tripmiles');
   const p = $('f-pickup') ? $('f-pickup').value.trim() : '', d = $('f-dropoff') ? $('f-dropoff').value.trim() : '';
-  if(!om || !tm || !OPS.gkey || p.length < 8 || d.length < 8) return;
+  if(!om || !tm || !OPS.mapsEnabled || p.length < 8 || d.length < 8) return;
   if(om.dataset.man==='1' || tm.dataset.man==='1') return; /* admin typed miles — respect it */
   const st = ($('f-stop') && $('f-triptype') && $('f-triptype').value==='Round Trip') ? $('f-stop').value.trim() : '';
   /* v6.52: optional different return address — the last leg ends there instead of back at the pickup */
@@ -1720,7 +1709,7 @@ function clientFormHTML(c){
       <div class="fgroup"><label>Date of Birth</label><input id="c-dob" type="date" value="${esc(c.dob)}"></div>
       <div class="fgroup"><label>Weight (lbs)</label><input id="c-weight" type="number" value="${esc(c.weight)}"></div>
     </div>
-    <div class="fgroup"><label>Home Address</label><input id="c-home" ${OPS.gkey?'':'list="addr-list"'} oninput="acSuggest(this)" autocomplete="off" value="${esc(c.homeAddress)}"></div>
+    <div class="fgroup"><label>Home Address</label><input id="c-home" ${OPS.mapsEnabled?'':'list="addr-list"'} oninput="acSuggest(this)" autocomplete="off" value="${esc(c.homeAddress)}"></div>
     <datalist id="addr-list">${addressOptions()}</datalist>
     <div class="fgroup"><label>Type of Trip</label>
       <select id="c-kind">
@@ -2269,7 +2258,7 @@ async function openSuggest(leadId, leg){
       if(near) conflict = near.x;
     }
     let eta = null;
-    if(hasPos && destAddr && OPS.gkey){
+    if(hasPos && destAddr && OPS.mapsEnabled){
       try{ eta = await routesDuration({lat:loc.lat, lng:loc.lng}, destAddr); }catch(e){ console.error(e); }
     }
     return {u:u, van:van, eta:eta, conflict:conflict, clocked:!!openShiftOf(u.id), hasPos:hasPos, legsCount:legs.length};
