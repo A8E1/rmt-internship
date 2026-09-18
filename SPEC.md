@@ -1,28 +1,34 @@
-# Billing suite — Pass B: characterization
+# Billing suite — Pass C: adversarial regressions
 
-## Scope
-Add Vitest and a committed npm lockfile. Write literal expected-output cases for
-suggestPrice, waitBill, rentFee, and totalCharge in tests/billing.test.js.
-Use one describe block per entry point and it.each for table-driven examples.
-These tests record existing behavior, including quirks; they do not approve every
-observed behavior as a business rule. Pass A's scope is archived in docs/specs/pass-a.md.
+## Scope and intended behavior
+Investigate and correct three concrete replica defects with failing tests before
+each fix. This is not a claim about production incidents or an owner-approved tariff.
+1. Numeric load-fee strings must produce the same numeric quote as numbers.
+2. Negative office or loaded mileage is treated as zero, not a discount. Existing
+   zero/null handling remains. This is a tolerant replica input policy, not a new fee.
+3. totalCharge adds integer cents for trip, combined waiting, and rental components.
+   Round each monetary component to nearest cent, ties away from zero, then sum.
+   Rates/mileage calculations retain precision until a billed component is formed.
+   Dollar numbers remain the public return type. Signed monetary adjustments remain.
+   Supported money inputs are finite amounts whose cents and sum are safe integers.
 
-## Do not touch
-No production JavaScript, HTML, billing fixes, CI, Edge Function, live credentials,
-backend calls, or deployment changes. Do not invent mileage tiers or surcharges.
-Leave the existing PR in draft. Pass C is a separate session and commit sequence.
+## Boundaries
+No invented 50-mile tier or after-hours tariff. Preserve the existing combined-stop
+wait rule and the minutes/hours conversion. No CI, proxy, backend calls, key changes,
+deployment, or unrelated UI refactor. Do not alter source snapshots outside this repo.
 
 ## Acceptance criteria
-- npm test runs vitest run and all characterization cases pass.
-- Cases use explicit expected values, not formulas copied from the implementation.
-- Cover ordinary quotes, waiting intervals, rental eligibility, combined-stop waiting,
-  recorded-versus-estimated waiting, and representative existing arithmetic quirks.
-- Mark quirks as observations, not intended policy; no claim of bugs fixed.
-- npm run verify:extraction still passes against the original commit.
-- npm ci can reproduce the installed development dependencies from the lockfile.
-- Commit this specification before tests and tooling; update learning/reviewer notes.
+- Commit this spec before tests. For each defect: commit a failing regression,
+  record the failure, then fix and commit with a passing result.
+- Keep the Pass B golden master at commit 3850d53; update only affected current
+  expectations and clearly identify intentional behavior changes.
+- Keep a historical extraction command checking the immutable Pass A snapshot;
+  do not compare intentionally corrected code against buggy outputs and call it parity.
+- Run the full Vitest suite after each fix. Test current adapters and rounding cases.
+- Maintain four entry-point describe blocks and table-driven boundary inputs.
+- Update learning notes and reviewer explanation with commit and test evidence.
+- Leave PR #1 unmerged. UI/backend integration remains outside the verified claims.
 
-## Following work
-Pass C evaluates adversarial cases against explicit intended behavior, then records
-failing tests and fixes for confirmed bugs. CI and security follow in their own PRs.
-Key rotation remains a simulation; no production security claim is supported.
+## Follow-on work
+After billing review: CI and required checks, then authenticated Google API proxy.
+Real key rotation remains simulated only. Production remediation is not claimed.
