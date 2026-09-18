@@ -13,7 +13,7 @@ function render(){
   if(!currentUser){ app.innerHTML = loginView(); return; }
   const isAdmin = currentUser.role==='admin';
   const tab = isAdmin ? adminTab : driverTab;
-  let body = '';
+  let body;
   if(isAdmin){
     if(tab==='leads') body = leadsView();
     else if(tab==='appts') body = apptsView();

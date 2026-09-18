@@ -6,10 +6,17 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:extraction-history": "node scripts/verify-billing-extraction.mjs"
+    "verify:extraction-history": "node scripts/verify-billing-extraction.mjs",
+    "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.10.0",
+    "globals": "17.12.0",
     "vite": "6.4.3",
     "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
   }
 }
